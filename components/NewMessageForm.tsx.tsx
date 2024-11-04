@@ -25,7 +25,7 @@ export function NewMessageForm({ user }: NewMessageFormProps) {
         <TextInput
           value={message}
           onChangeText={setMessage}
-          className="h-full w-full rounded-md border-0 px-2.5 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300"
+          className="h-full w-full rounded-md border-0 px-2.5 py-1.5 text-white shadow-sm ring-1 ring-inset ring-gray-300"
           placeholder="Message"
         />
       </View>
