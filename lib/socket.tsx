@@ -1,40 +1,38 @@
 import { Message } from '@/lib/messages'
-import { GithubSuccesResponse } from '@/types'
 import { createContext, ReactNode, useContext } from 'react';
 import { io, Socket as IOSocket } from 'socket.io-client'
 
 interface EventsListenerMap {
     // [event: string]: (...args: any[]) => void
-    authSuccess: (data: { message: string; user: GithubSuccesResponse }) => any
+    authSuccess: (data: { message: string; user: string }) => any
     authError: (data: { message: string }) => any
-    message(data: { username: string; message: string }): any
+    message(data: Message): any
 }
 
-type kyes = EventsListenerMap['authSuccess']
-const a: kyes = a => null
 interface EventsEmitMap {
     // [event: string]: (...args: any[]) => void
-    auth: (token: string) => any
+    auth: (username: string) => any
     sendMessage: (message: Message) => any
 }
 export class Socket {
     instance?: IOSocket<EventsListenerMap, EventsEmitMap>
     constructor() {}
 
-    async createInstance(token: string) {
-        return new Promise((resolve, reject) => {
-            this.instance = io(process.env.NEXT_PUBLIC_WEBSOCKET_URL, {
+    async createInstance(username: string) {
+        return new Promise<this>((resolve, reject) => {
+            this.instance = io('ws://localhost:25565', {
                 transports: ['websocket'],
                 rejectUnauthorized: false,
             })
             console.log('connect')
             this.instance.on('connect', async () => {
                 console.log('conected')
-                await this.authenticateSocket(token)
+                await this.authenticateSocket(username)
                 resolve(this)
             })
             this.instance.on('connect_error', err => {
                 console.log('connect_error', err)
+                reject(err)
             })
         })
     }
@@ -46,11 +44,15 @@ export class Socket {
         this.instance?.emit(ev, ...args)
     }
 
-    authenticateSocket(token: string) {
+    onMessage(cb: EventsListenerMap['message']) {
+        this.instance?.on('message', cb)
+    }
+
+    authenticateSocket(username: string) {
         return new Promise<IOSocket<EventsListenerMap, EventsEmitMap>>(
             (resolve, reject) => {
                 if (!this.instance) reject(new Error("Don't have an instance"))
-                this.instance?.emit('auth', token)
+                this.instance?.emit('auth', username)
                 console.log('trying authenticate')
 
                 this.instance?.on('authSuccess', data => {

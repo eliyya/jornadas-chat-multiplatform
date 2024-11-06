@@ -1,61 +1,79 @@
 import { HeaderChat } from '@/components/HeaderChat';
 import { MessageList } from '@/components/MessageList';
 import { NewMessageForm } from '@/components/NewMessageForm.tsx';
-import { View, Text, Image, TouchableOpacity, Alert } from 'react-native';
-import {SocketProvider} from '@/lib/socket'
+import { SafeAreaView, View, Text, Image, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { SocketProvider } from '@/lib/socket'
 // import { Linking } from 'react-native';
+import * as WebBrowser from 'expo-web-browser';
+import { useAuthRequest, makeRedirectUri } from 'expo-auth-session';
+import { useContext, useState } from 'react';
+import { useSession } from '@/lib/session';
+
+const styles = StyleSheet.create({
+  container: {
+    backgroundColor: 'black',
+    position: 'relative',           // relative
+    flex: 1,                        // flex para ocupar el espacio disponible en su contenedor
+    flexDirection: 'column',        // flex-col
+    gap: 12,                        // gap-3 (3 * 4 = 12)
+  },
+});
+
 
 export default function HomeScreen() {
-  const user = {
-    login: "exampleUser",
-    id: 123456,
-    node_id: "MDQ6VXNlcjEyMzQ1Ng==",
-    avatar_url: "https://avatars.githubusercontent.com/u/123456?v=4",
-    gravatar_id: "",
-    url: "https://api.github.com/users/exampleUser",
-    html_url: "https://github.com/exampleUser",
-    followers_url: "https://api.github.com/users/exampleUser/followers",
-    following_url: "https://api.github.com/users/exampleUser/following{/other_user}",
-    gists_url: "https://api.github.com/users/exampleUser/gists{/gist_id}",
-    starred_url: "https://api.github.com/users/exampleUser/starred{/owner}{/repo}",
-    subscriptions_url: "https://api.github.com/users/exampleUser/subscriptions",
-    organizations_url: "https://api.github.com/users/exampleUser/orgs",
-    repos_url: "https://api.github.com/users/exampleUser/repos",
-    events_url: "https://api.github.com/users/exampleUser/events{/privacy}",
-    received_events_url: "https://api.github.com/users/exampleUser/received_events",
-    type: "User",
-    user_view_type: "default",
-    site_admin: false,
-    name: "Example User",
-    company: null,
-    blog: "https://example.com",
-    location: "Example City, Country",
-    email: null,
-    hireable: null,
-    bio: "This is an example user for demonstration purposes.",
-    twitter_username: "exampleUser",
-    public_repos: 10,
-    public_gists: 5,
-    followers: 100,
-    following: 50,
-    created_at: "2021-01-01T12:00:00Z",
-    updated_at: "2024-01-01T12:00:00Z",
+  const { setUsername, username } = useSession()
+
+  const discovery = {
+    authorizationEndpoint: 'https://github.com/login/oauth/authorize',
+    tokenEndpoint: 'https://github.com/login/oauth/access_token',
+  }
+
+  const [authRequest] = useAuthRequest(
+    {
+      clientId: 'Ov23li4rlMbBfbPhXQAq',
+      redirectUri: makeRedirectUri({
+        scheme: 'jrtcm',
+      }),
+      scopes: ['user'],
+    },
+    discovery
+  )
+
+  const handleLogin = async () => {
+    const response = await authRequest?.promptAsync(discovery);
+
+    if (response?.type === 'success') {
+      const { code } = response.params;
+      fetch('http://localhost:25565/auth', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json', // Tipo de contenido
+        },
+        body: JSON.stringify({
+          code
+        })
+      }).then(r => r.json()).then(({ token }) => {
+        setToken(token)
+        Alert.alert("Autenticación Exitosa", `Código: ${code}`);
+      })
+
+    } else {
+      Alert.alert("Error", "No se pudo iniciar sesión");
+    }
   };
-  
-  return (
-    <View className="relative flex min-h-screen sm:w-2/3 lg:w-1/2 w-full flex-col gap-3">
+
+
+
+  if (username) return (
+    <SafeAreaView style={styles.container}>
       <SocketProvider>
-      <View className="sticky top-0 z-10 -mx-2 px-2">
-        <HeaderChat user={user} />
-      </View>
-      <View className="flex-1">
-        <MessageList user={user} />
-      </View>
-      <View className="sticky bottom-0 -mx-2 py-2 pb-10 px-2">
-        <NewMessageForm user={user} />
-      </View>
+        <HeaderChat username={username} />
+        <View className="flex-1">
+          <MessageList username={username} />
+        </View>
+        <NewMessageForm username={username} />
       </SocketProvider>
-    </View>
+    </SafeAreaView>
   )
   return (
     <View className="flex-1 sm:w-2/3 lg:w-1/2 w-full mx-auto flex-col gap-3">
@@ -74,13 +92,7 @@ export default function HomeScreen() {
             </Text>
           </View>
           <TouchableOpacity
-            onPress={() => {
-              // const clientId = process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID;
-              // const callbackUrl = encodeURIComponent(process.env.NEXT_PUBLIC_GITHUB_CALLBACK_URL!);
-              // const url = `https://github.com/login/oauth/authorize?client_id=${clientId}&scope=user&redirect_uri=${callbackUrl}`;
-
-              // Linking.openURL(url).catch((err) => Alert.alert("Error", "Unable to open URL"));
-            }}
+            onPress={handleLogin}
             className="rounded-md border-gray-500 border p-2 hover:bg-gray-800 transition-all flex flex-row justify-center gap-2 items-center"
           >
             <Text className="text-center text-white">Login with GitHub</Text>

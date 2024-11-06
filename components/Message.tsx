@@ -15,17 +15,18 @@ interface MessageProps {
 export function Message({ message, showName, mine, showAvatar }: MessageProps) {
     return (
         <View
-            className={`relative flex max-w-[85%] flex-col gap-1 rounded-md border p-2 pb-1 shadow md:max-w-[66%] text-black ${
-                mine
+            className={`relative flex max-w-[85%] flex-col gap-1 rounded-md border p-2 pb-1 shadow md:max-w-[66%] text-black ${mine
                     ? 'self-end border-red-200 bg-red-100'
                     : 'self-start bg-white'
-            }`}
+                }`}
         >
             {showAvatar && (
                 <View className="absolute bottom-0 left-0 h-8 w-8 -translate-x-[calc(100%+8px)]">
                     <View className="relative">
                         <Image
-                            source={require('../assets/images/github-mark-white.png')}
+                            source={
+                                message.avatar ? { uri: message.avatar } : require('../assets/images/LogoSistemas.png')
+                            }
                         />
                     </View>
                 </View>

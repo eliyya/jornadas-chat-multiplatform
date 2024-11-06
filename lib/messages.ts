@@ -19,24 +19,25 @@ export interface Message {
 
 export const $messages = atom<Message[]>([]);
 
-export function createMessage({message,socket,username}:{message: string, username: string, socket: Socket})  {
+export function createMessage({ message, socket, username, avatar }: { message: string, username: string, socket: Socket, avatar?: string }) {
     const body = {
         content: message,
         createdAt: new Date().toISOString(), // Usar ISO para la fecha
         id: uuidv4(), // Usar uuid para ID único
         username,
+        avatar
     };
     socket.emit('sendMessage', body);
-    $messages.set([...$messages.get(), body]);
+    $messages.set([...$messages.get().filter(m => m.id !== body.id), body])
     console.log(body);
 }
 
 let emit =
     (snapshotRef: MutableRefObject<any>, onChange: Function) =>
-    (value: any) => {
-        snapshotRef.current = value;
-        onChange();
-    }
+        (value: any) => {
+            snapshotRef.current = value;
+            onChange();
+        }
 
 type StoreKeys<T> = T extends { setKey: (k: infer K, v: any) => unknown }
     ? K
@@ -57,10 +58,10 @@ export function useStore<SomeStore extends Store>(
         (onChange: Function) =>
             (keys?.length as number) > 0
                 ? listenKeys(
-                      store as { setKey: (key: any, value: any) => void },
-                      keys as StoreKeys<SomeStore>[],
-                      emit(snapshotRef, onChange),
-                  )
+                    store as { setKey: (key: any, value: any) => void },
+                    keys as StoreKeys<SomeStore>[],
+                    emit(snapshotRef, onChange),
+                )
                 : store.listen(emit(snapshotRef, onChange)),
         deps,
     );

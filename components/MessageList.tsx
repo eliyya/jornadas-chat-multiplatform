@@ -1,28 +1,25 @@
 import React, { useEffect } from 'react';
-import { View, ScrollView } from 'react-native';
-// import { $messages, useStore } from '@/lib/messages';
-// import { Message } from './Message';
-// import { socket } from '@/lib/socket';
-// import { getToken } from '@/actions/auth';
-import { GithubSuccesResponse } from '@/types';
-import {Message} from '@/components/Message'
+import { ScrollView } from 'react-native';
+import { Message } from '@/components/Message'
 import { useSocket } from '@/lib/socket';
+import { $messages, useStore } from '@/lib/messages';
 
 interface MessageListProps {
-  user: GithubSuccesResponse;
+  username: string;
 }
-
-export function MessageList({ user }: MessageListProps) {
-  const messages: any[] = [/*useStore($messages)*/];
+export function MessageList({ username }: MessageListProps) {
+  const messages = useStore($messages);
   const socket = useSocket()
 
   useEffect(() => {
-    // const executeAsync = async () => {
-    //   const token = (await getToken())!;
-    //   await socket.createInstance(token).catch(e => console.log(e));
-    // };
-    // executeAsync();
-  }, []);
+    socket.createInstance(username).then(s => s.onMessage(data => {
+      $messages.set([
+        ...$messages.get().filter(m => m.id !== data.id),
+        data,
+      ])
+    }))
+
+  }, [socket])
 
   return (
     <ScrollView
@@ -30,7 +27,7 @@ export function MessageList({ user }: MessageListProps) {
       contentContainerStyle={{ paddingBottom: 20 }}
     >
       {messages.map((message, i) => {
-        const mine = message.username === user.login;
+        const mine = message.username === username;
         const showName =
           !mine && messages[i - 1]?.username !== message.username;
         const showAvatar =
