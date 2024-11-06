@@ -75,8 +75,9 @@ export default function HomeScreen() {
       </SocketProvider>
     </SafeAreaView>
   )
+  
   return (
-    <View className="flex-1 sm:w-2/3 lg:w-1/2 w-full mx-auto flex-col gap-3">
+    <View className="flex-1 sm:w-2/3 lg:w-1/2 w-full mx-auto flex-col gap-3 bg-black">
       <View className="flex-1 items-center justify-center">
         <View className="-mt-12 flex max-w-xs flex-col items-center">
           <Image
@@ -84,10 +85,10 @@ export default function HomeScreen() {
             style={{ width: 320, height: 247 }}
           />
           <View className="my-10">
-            <Text className="mb-4 text-center text-2xl font-semibold text-balance">
+            <Text className="mb-4 text-center text-2xl font-semibold text-balance text-white">
               Welcome to Realtime Chat
             </Text>
-            <Text className="text-sm text-center">
+            <Text className="text-sm text-center text-white">
               Before you start chatting, log in with your GitHub account to verify who you are.
             </Text>
           </View>
