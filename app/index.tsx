@@ -1,18 +1,16 @@
 import { HeaderChat } from '@/components/HeaderChat';
 import { MessageList } from '@/components/MessageList';
 import { NewMessageForm } from '@/components/NewMessageForm.tsx';
-import { SafeAreaView, View, Text, Image, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { SafeAreaView, View, Text, Image, StyleSheet, Alert, TextInput, Pressable } from 'react-native';
 import { SocketProvider } from '@/lib/socket'
 // import { Linking } from 'react-native';
-import * as WebBrowser from 'expo-web-browser';
-import { useAuthRequest, makeRedirectUri } from 'expo-auth-session';
-import { useContext, useState } from 'react';
+import { newMessageFormStyles } from '@/lib/styles'
+import { useState } from 'react';
 import { useSession } from '@/lib/session';
 
 const styles = StyleSheet.create({
   container: {
     backgroundColor: 'black',
-    position: 'relative',           // relative
     flex: 1,                        // flex para ocupar el espacio disponible en su contenedor
     flexDirection: 'column',        // flex-col
     gap: 12,                        // gap-3 (3 * 4 = 12)
@@ -21,45 +19,19 @@ const styles = StyleSheet.create({
 
 
 export default function HomeScreen() {
-  const { setUsername, username } = useSession()
-
-  const discovery = {
-    authorizationEndpoint: 'https://github.com/login/oauth/authorize',
-    tokenEndpoint: 'https://github.com/login/oauth/access_token',
-  }
-
-  const [authRequest] = useAuthRequest(
-    {
-      clientId: 'Ov23li4rlMbBfbPhXQAq',
-      redirectUri: makeRedirectUri({
-        scheme: 'jrtcm',
-      }),
-      scopes: ['user'],
-    },
-    discovery
-  )
+  const { setUsername, username, setAvatar, avatar } = useSession()
+  const [usern, setUsern] = useState('')
 
   const handleLogin = async () => {
-    const response = await authRequest?.promptAsync(discovery);
+    setUsername(usern)
 
-    if (response?.type === 'success') {
-      const { code } = response.params;
-      fetch('http://localhost:25565/auth', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json', // Tipo de contenido
-        },
-        body: JSON.stringify({
-          code
-        })
-      }).then(r => r.json()).then(({ token }) => {
-        setToken(token)
-        Alert.alert("Autenticación Exitosa", `Código: ${code}`);
-      })
-
-    } else {
-      Alert.alert("Error", "No se pudo iniciar sesión");
-    }
+    fetch('https://api.github.com/users/' + usern, {
+      headers: {
+        'Content-Type': 'application/json', // Tipo de contenido
+      },
+    }).then(r => r.json()).then(({ avatar_url }) => {
+      setAvatar(avatar_url)
+    }).catch(() => null)
   };
 
 
@@ -71,11 +43,11 @@ export default function HomeScreen() {
         <View className="flex-1">
           <MessageList username={username} />
         </View>
-        <NewMessageForm username={username} />
+        <NewMessageForm avatar={avatar} username={username} />
       </SocketProvider>
     </SafeAreaView>
   )
-  
+
   return (
     <View className="flex-1 sm:w-2/3 lg:w-1/2 w-full mx-auto flex-col gap-3 bg-black">
       <View className="flex-1 items-center justify-center">
@@ -89,19 +61,26 @@ export default function HomeScreen() {
               Welcome to Realtime Chat
             </Text>
             <Text className="text-sm text-center text-white">
-              Before you start chatting, log in with your GitHub account to verify who you are.
+              Before you start chatting, log in with your GitHub username to set who you are.
             </Text>
           </View>
-          <TouchableOpacity
-            onPress={handleLogin}
-            className="rounded-md border-gray-500 border p-2 hover:bg-gray-800 transition-all flex flex-row justify-center gap-2 items-center"
-          >
-            <Text className="text-center text-white">Login with GitHub</Text>
-            <Image
-              source={require('../assets/images/github-mark-white.png')}
-              style={{ width: 24, height: 24 }}
+          <View style={newMessageFormStyles.container}>
+            <TextInput
+              value={usern}
+              onChangeText={setUsern}
+              style={newMessageFormStyles.input}
+              placeholder="Message"
             />
-          </TouchableOpacity>
+            <Pressable
+              onPress={handleLogin}
+              style={({ pressed }) => [
+                newMessageFormStyles.button,
+                pressed && newMessageFormStyles.hover,
+              ]}
+            >
+              <Text style={newMessageFormStyles.text} >Send</Text>
+            </Pressable>
+          </View>
         </View>
       </View>
     </View>

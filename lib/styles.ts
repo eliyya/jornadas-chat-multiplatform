@@ -3,8 +3,8 @@ import { StyleSheet } from 'react-native'
 export const headerStyles = StyleSheet.create({
     container: {
         height: 78,
+        minWidth: 250,
         display: 'flex',
-        width: '100%',                  // h-24 (24 * 4 = 96)
         backgroundColor: '#ffffff',   // bg-white
         padding: 8,         // px-2 (2 * 4 = 8)
         flexDirection: 'row',         // flex-row
@@ -73,6 +73,7 @@ export const newMessageFormStyles = StyleSheet.create({
     text: {
         color: '#000000',
         textAlign: 'center',
+        backgroundColor: 'white',
         padding: 8
     },
 });

@@ -4,7 +4,7 @@ import { io, Socket as IOSocket } from 'socket.io-client'
 
 interface EventsListenerMap {
     // [event: string]: (...args: any[]) => void
-    authSuccess: (data: { message: string; user: string }) => any
+    authSuccess: (data: { message: string; user: {username: string,avatar?:string} }) => any
     authError: (data: { message: string }) => any
     message(data: Message): any
 }
